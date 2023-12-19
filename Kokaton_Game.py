@@ -40,6 +40,10 @@ class Enemy(pygame.sprite.Sprite):
         for shot in self.shots:
             collide = self.rect.colliderect(shot.rect)
             if collide:  # 衝突するミサイルあり
+                # a = pygame.mixer.Sound("data/sound.wav")
+                # a.play()  
+                pygame.mixer.music.load("data/1214.mp3")
+                pygame.mixer.music.play(1)  # ミサイルが敵に当たったらBGMを1回流す
                 self.kill()
                 
 
@@ -165,6 +169,8 @@ class Kokaton(pygame.sprite.Sprite):
                 self.image = self.down_image
                 down_flag = 1
                 self.fpvy = - self.JUMP_SPEED * 2  # 上向きに初速度を与える
+                pygame.mixer.music.load("data/damage.mp3")
+                pygame.mixer.music.play(1)  # 敵に当たったらBGMを1回流す
             else:
                 down_flag = 0
         # return down_flag
@@ -351,6 +357,9 @@ class Kokaton_Game:
             self.draw(screen)
             pygame.display.update()
             self.key_handler()
+            if not pygame.mixer.music.get_busy():  # BGMがなかったら
+                pygame.mixer.music.load("data/tanken.mp3")  
+                pygame.mixer.music.play(-1)  # BGMを流す
 
     def update(self):
         self.map.update()
