@@ -325,7 +325,24 @@ def load_image(filename, colorkey=None):
         image.set_colorkey(colorkey, RLEACCEL)
     return image
 
-       
+
+class Remaining_Enemies:
+    def __init__(self, map):
+        self.font = pygame.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.color=(255, 255, 0)
+        #x = Map("data/test2.map")
+        x = map
+        self.image = self.font.render(f"残り敵数：{len(x.enemys)}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, 30
+
+    def update(self, screen: pygame.Surface, map):
+        #x = Map("data/test2.map")
+        x = map
+        self.image = self.font.render(f"残り敵数:{len(x.enemys)}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
 class Kokaton_Game:
     def __init__(self):
         pygame.init()
@@ -345,14 +362,19 @@ class Kokaton_Game:
 
         # メインループ
         clock = pygame.time.Clock()
+        self.remaining_enemies = Remaining_Enemies(self.map)
         while True:
             clock.tick(60)
-            self.update()
             self.draw(screen)
+            self.update(screen)
             pygame.display.update()
             self.key_handler()
+            if len(self.map.enemys) == 0:
+                pygame.quit()
+                sys.exit()
 
-    def update(self):
+    def update(self, screen):
+        self.remaining_enemies.update(screen, self.map)
         self.map.update()
 
     def draw(self, screen):
