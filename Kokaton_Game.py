@@ -43,7 +43,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.kill()
                 
 
-class Shot(pygame.sprite.Sprite):
+class Shot_s(pygame.sprite.Sprite):
     def __init__(self, pos, player_x, blocks):
         # imageとcontainersはmain()でセット
         pygame.sprite.Sprite.__init__(self, self.containers)
@@ -66,7 +66,34 @@ class Shot(pygame.sprite.Sprite):
             if collide:  # 衝突するブロックあり
                 self.kill()
                 
-        
+
+class Shot_a(pygame.sprite.Sprite):
+    def __init__(self, pos, player_x, blocks):
+        # imageとcontainersはmain()でセット
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.rect = self.image.get_rect()
+        self.rect.center = pos   # 中心座標をposに
+        self.player_x = player_x # プレーヤーの向き判定
+        self.blocks = blocks     # 衝突判定用
+        self.speed_x, self.speed_y= 5, -5 # ミサイルの移動速度
+        self.mirorr = []
+
+    def update(self):
+        if self.player_x == 1:
+            self.rect.move_ip(self.speed_x, self.speed_y)  # 右へ移動
+        elif self.player_x == 0:  
+            self.rect.move_ip(-self.speed_x, self.speed_y)  # 左へ移動
+
+        """衝突判定"""
+        # ブロックとミサイルの衝突判定
+        for block in self.blocks:
+            collide = self.rect.colliderect(block.rect)
+            if collide:  # 衝突するブロックあり
+                self.mirorr.append(collide)
+                self.speed_y *= -1
+            elif len(self.mirorr) > 6:
+                self.kill()
+
 class Kokaton(pygame.sprite.Sprite):
     """エネミー"""
     # MOVE_SPEED = 2.5    # 移動速度
@@ -136,7 +163,16 @@ class Kokaton(pygame.sprite.Sprite):
         if pressed_keys[K_s]:
             # リロード時間が5になるまで再発射できない
             if self.reload_timer > self.RELOAD_TIME:
-                Shot(self.rect.center, self.player_x, self.blocks)  # 作成すると同時にallに追加される
+                Shot_s(self.rect.center, self.player_x, self.blocks)  # 作成すると同時にallに追加される
+                self.reload_timer = 0
+            else:
+                self.reload_timer += 1 # リロード中
+        
+                # ミサイルの発射 add
+        if pressed_keys[K_a]:
+            # リロード時間が5になるまで再発射できない
+            if self.reload_timer > self.RELOAD_TIME:
+                Shot_a(self.rect.center, self.player_x, self.blocks)  # 作成すると同時にallに追加される
                 self.reload_timer = 0
             else:
                 self.reload_timer += 1 # リロード中
@@ -239,7 +275,8 @@ class Map:
         self.shots = pygame.sprite.Group()   # ミサイルグループ
         Kokaton.containers = self.all
         Block.containers = self.all, self.blocks
-        Shot.containers = self.all, self.shots  # add
+        Shot_s.containers = self.all, self.shots  # add
+        Shot_a.containers = self.all, self.shots  # add
         Enemy.containers = self.all, self.enemys # add
 
         # プレイヤーの作成
@@ -337,7 +374,8 @@ class Kokaton_Game:
         Kokaton.right_image = pygame.transform.flip(Kokaton.left_image, 1, 0)  # 左向き
         Kokaton.down_image = pygame.transform.flip(Kokaton.right_image, 0, 1)  # 下向き
         Block.image = load_image("block.png", -1)
-        Shot.image = load_image("fireball.png")    # add
+        Shot_s.image = load_image("fireball.png")    # add
+        Shot_a.image = load_image("fireball.png")    # add
         Enemy.image = load_image("enemy.png", -1) # add               # 左向き
         
         # マップのロード
