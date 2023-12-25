@@ -327,19 +327,28 @@ def load_image(filename, colorkey=None):
 
 
 class Remaining_Enemies:
-    def __init__(self, map):
+    """
+    残り敵数の表示に関するクラス
+    """
+    def __init__(self, map: Map):
+        """
+        文字列Surfaceを生成する
+        引数1 map：ロードしたマップ
+        """
         self.font = pygame.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
         self.color=(255, 255, 0)
-        #x = Map("data/test2.map")
-        x = map
-        self.image = self.font.render(f"残り敵数：{len(x.enemys)}", 0, self.color)
+        self.map = map
+        self.image = self.font.render(f"残り敵数：{len(self.map.enemys)}", 0, self.color)
         self.rect = self.image.get_rect()
-        self.rect.center = 100, 30
+        self.rect.center = 90, 30
 
-    def update(self, screen: pygame.Surface, map):
-        #x = Map("data/test2.map")
-        x = map
-        self.image = self.font.render(f"残り敵数:{len(x.enemys)}", 0, self.color)
+    def update(self, screen: pygame.Surface, map: Map):
+        """
+        現在の残り敵数を表示させる文字列Surfaceを作成し、画面に転送する
+        引数1 map：ロードしたマップ
+        """
+        self.map = map
+        self.image = self.font.render(f"残り敵数:{len(self.map.enemys)}", 0, self.color)
         screen.blit(self.image, self.rect)
 
 
@@ -367,9 +376,29 @@ class Kokaton_Game:
             clock.tick(60)
             self.draw(screen)
             self.update(screen)
-            pygame.display.update()
             self.key_handler()
-            if len(self.map.enemys) == 0:
+            pygame.display.update()
+            if len(self.map.enemys) == 0:  # もし残りの敵がゼロならば
+                start_time = pygame.time.get_ticks()  # ループの開始時刻を取得
+                while True:
+                    clock.tick(60)
+                    self.draw(screen)
+                    self.update(screen)
+                    self.key_handler()
+                    pygame.display.update()
+                    current_time = pygame.time.get_ticks()  # 現在時刻を取得
+                    if current_time - start_time >= 1000:  # 1秒経過したらループを抜ける
+                        break
+                start_time = pygame.time.get_ticks()  # ループの開始時刻を取得
+                while True:
+                    clock.tick(60)
+                    clear_image = load_image("clear.png")  # ゲームクリア画面を用意
+                    screen.blit(clear_image, (0, 0))  # ゲームクリア画面を転送
+                    self.key_handler()
+                    pygame.display.update()
+                    current_time = pygame.time.get_ticks()  # 現在時刻を取得
+                    if current_time - start_time >= 3000:  # 3秒経過したらループを抜ける
+                        break
                 pygame.quit()
                 sys.exit()
 
