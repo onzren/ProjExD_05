@@ -246,6 +246,7 @@ class Kokaton(pygame.sprite.Sprite):
                 # ミサイルの発射 add
         if pressed_keys[K_a]and not pressed_keys[K_s]:
             # リロード時間が5になるまで再発射できない
+            self.kidan_sound.play()  # Aをクリックしたら効果音を1回流す
             if self.reload_timer > self.RELOAD_TIME:
                 Shot_a(self.rect.center, self.player_x, self.blocks, self.traps)  # 作成すると同時にallに追加される
                 self.reload_timer = 0
@@ -276,6 +277,7 @@ class Kokaton(pygame.sprite.Sprite):
             collide = self.rect.colliderect(enemy.rect)
             if self.coltm == 0:
                 if collide:  # 衝突するミサイルあり
+                    self.damage_sound.play()
                     self.image = self.down_image
                     self.life -= 1  # ライフを一つ減少
                     self.coltm += 1
@@ -562,11 +564,11 @@ def game_end(surface, life, screen):
     pygame.draw.rect(bg,(0, 0, 0), (0, 0, 1600, 900))
     bg.set_alpha(128)
     screen.blit(bg, (0,0))
-    if life <= 0:
-        img = load_image("game_over.png")
-        img = pygame.transform.rotozoom(img, 0, 2.0)
-        str = font.render(f"Game Over", 0, (255, 0, 0))
-
+    img = load_image("game_over.png")
+    img = pygame.transform.rotozoom(img, 0, 2.0)
+    str = font.render(f"Game Over", 0, (255, 0, 0))
+    pygame.mixer.music.load("data/gameover.mp3")  
+    pygame.mixer.music.play(1)  # BGMを流す
     screen.blit(img, (250, 240))
     screen.blit(str, (150, 50))
     pygame.display.update()
@@ -615,6 +617,8 @@ class Kokaton_Game:
                     if current_time - start_time >= 1000:  # 1秒経過したらループを抜ける
                         break
                 start_time = pygame.time.get_ticks()  # ループの開始時刻を取得
+                pygame.mixer.music.load("data/clear.mp3")  
+                pygame.mixer.music.play(1)  # BGMを流す
                 while True:
                     clock.tick(60)
                     clear_image = load_image("clear.png")  # ゲームクリア画面を用意
