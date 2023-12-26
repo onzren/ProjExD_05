@@ -47,8 +47,10 @@ class Shot_s(pygame.sprite.Sprite):
     def __init__(self, pos, player_x, blocks):
         # imageとcontainersはmain()でセット
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.beam_s = 0
         self.rect = self.image.get_rect()
-        self.rect.center = pos   # 中心座標をposに
+        self.pos = pos
+        self.rect.center = self.pos   # 中心座標をposに
         self.player_x = player_x # プレーヤーの向き判定
         self.blocks = blocks     # 衝突判定用
         self.speed = 9           # ミサイルの移動速度
@@ -57,6 +59,11 @@ class Shot_s(pygame.sprite.Sprite):
         if self.player_x == 1:
             self.rect.move_ip(self.speed, 0)  # 右へ移動
         elif self.player_x == 0:
+            if self.beam_s == 0:
+                self.image = pygame.transform.flip(self.image, True, False)
+                self.rect = self.image.get_rect()
+                self.rect.center = self.pos   # 中心座標をposに
+                self.beam_s += 1
             self.rect.move_ip(-self.speed, 0)  # 左へ移動
 
         """衝突判定"""
@@ -71,28 +78,63 @@ class Shot_a(pygame.sprite.Sprite):
     def __init__(self, pos, player_x, blocks):
         # imageとcontainersはmain()でセット
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.beam_a = 0
+        self.image.set_colorkey((255, 255, 255))
         self.rect = self.image.get_rect()
-        self.rect.center = pos   # 中心座標をposに
+        self.pos = pos
+        self.rect.center = self.pos   # 中心座標をposに
         self.player_x = player_x # プレーヤーの向き判定
         self.blocks = blocks     # 衝突判定用
         self.speed_x, self.speed_y= 5, -5 # ミサイルの移動速度
-        self.mirorr = []
+        self.mirorr = 0
 
     def update(self):
         if self.player_x == 1:
             self.rect.move_ip(self.speed_x, self.speed_y)  # 右へ移動
-        elif self.player_x == 0:  
-            self.rect.move_ip(-self.speed_x, self.speed_y)  # 左へ移動
+            """衝突判定"""
+            # ブロックとミサイルの衝突判定
+            for block in self.blocks:
+                if self.rect.x >= block.rect.left and self.rect.y <= block.rect.y:
+                    print(1)
+                collide = self.rect.colliderect(block.rect)
+                if collide:  # 衝突するブロックあり
+                    self.rect.move_ip(-self.speed_x, -self.speed_y)
+                    self.speed_y *= -1
+                    if self.mirorr == 0 or self.mirorr == 2:
+                        self.mirorr += 1
+                        self.image = pygame.transform.rotozoom(self.image,  -90, 1)
+                        self.image.set_colorkey((255, 255, 255))
+                    elif self.mirorr == 1:
+                        self.mirorr += 1
+                        self.image = pygame.transform.rotozoom(self.image,  90, 1)
+                        self.image.set_colorkey((255, 255, 255))
+                    if self.mirorr == 3:
+                        self.kill()
 
-        """衝突判定"""
-        # ブロックとミサイルの衝突判定
-        for block in self.blocks:
-            collide = self.rect.colliderect(block.rect)
-            if collide:  # 衝突するブロックあり
-                self.mirorr.append(collide)
-                self.speed_y *= -1
-            elif len(self.mirorr) > 6:
-                self.kill()
+        elif self.player_x == 0: 
+            if self.beam_a == 0:
+                self.image = pygame.transform.flip(self.image, True, False)
+                self.rect = self.image.get_rect()
+                self.rect.center = self.pos   # 中心座標をposに
+                self.beam_a += 1 
+            self.rect.move_ip(-self.speed_x, self.speed_y)  # 左へ移動
+            """衝突判定"""
+            # ブロックとミサイルの衝突判定
+            for block in self.blocks:
+                collide = self.rect.colliderect(block.rect)
+                if collide:  # 衝突するブロックあり
+                    self.rect.move_ip(-self.speed_x, -self.speed_y)
+                    self.speed_y *= -1
+                    if self.mirorr == 0 or self.mirorr == 2:
+                        self.mirorr += 1
+                        self.image = pygame.transform.rotozoom(self.image,  90, 1)
+                        self.image.set_colorkey((255, 255, 255))
+                    elif self.mirorr == 1:
+                        self.mirorr += 1
+                        self.image = pygame.transform.rotozoom(self.image,  -90, 1)
+                        self.image.set_colorkey((255, 255, 255))
+                    if self.mirorr == 3:
+                        self.kill()
 
 class Kokaton(pygame.sprite.Sprite):
     """エネミー"""
@@ -375,7 +417,7 @@ class Kokaton_Game:
         Kokaton.down_image = pygame.transform.flip(Kokaton.right_image, 0, 1)  # 下向き
         Block.image = load_image("block.png", -1)
         Shot_s.image = load_image("fireball.png")    # add
-        Shot_a.image = load_image("fireball.png")    # add
+        Shot_a.image = pygame.transform.rotozoom(load_image("fireball.png"), 45, 0.8)  # add
         Enemy.image = load_image("enemy.png", -1) # add               # 左向き
         
         # マップのロード
