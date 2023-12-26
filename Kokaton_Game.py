@@ -185,7 +185,7 @@ class Kokaton(pygame.sprite.Sprite):
         self.traps = traps
         self.enemys = enemys   # 衝突判定用
         self.reload_timer = 0  # リロード時間
-        self.life = 100  # こうかとんのライフ数
+        self.life = 5  # こうかとんのライフ数
         self.coltm = 0
         self.invincible = False
         # self.invincible_timer = 0
@@ -277,9 +277,9 @@ class Kokaton(pygame.sprite.Sprite):
             if self.coltm == 0:
                 if collide:  # 衝突するミサイルあり
                     self.image = self.down_image
-                    self.life -= 10  # ライフを一つ減少
+                    self.life -= 1  # ライフを一つ減少
                     self.coltm += 1
-                    self.fpvy = - self.JUMP_SPEED * 1.5  # 上向きに初速度を与える
+                    self.fpvy = - self.JUMP_SPEED * 1.2  # 上向きに初速度を与える
             elif 1 <= self.coltm < 180:
                 self.coltm += 1
             else:
@@ -294,7 +294,7 @@ class Kokaton(pygame.sprite.Sprite):
             collide = self.rect.colliderect(trap.rect)
             if self.invincible == False:
                 if collide:  # 衝突するトラップあり
-                    self.life -= 10  # ライフを一つ減少
+                    self.life -= 1  # ライフを一つ減少
                     if self.fpvx > 0:    # 右に移動中に衝突
                         # めり込まないように調整して速度を0に
                         self.fpx = trap.rect.left - width
@@ -313,7 +313,7 @@ class Kokaton(pygame.sprite.Sprite):
                         self.fpy = trap.rect.bottom
                         self.fpvy = 0
                     self.image = self.down_image
-                    self.fpvy = - self.JUMP_SPEED * 1.5  # 上向きに初速度を与える
+                    self.fpvy = - self.JUMP_SPEED * 1.2  # 上向きに初速度を与える
                     self.invincible = True
                         
 
@@ -633,6 +633,8 @@ class Kokaton_Game:
             #print(self.map.kokaton.life)
             # print(self.map.kokaton.coltm)
             if self.map.kokaton.life <= 0:
+                self.draw(screen)
+                self.update(screen)
                 game_end(self.map.surface, self.map.kokaton.life, screen)
                 return
 
