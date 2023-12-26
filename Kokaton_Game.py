@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import os
 import sys
+import time
 
 class Block(pygame.sprite.Sprite):
     """ブロック"""
@@ -158,6 +159,8 @@ class Kokaton(pygame.sprite.Sprite):
         self.blocks = blocks   # 衝突判定用
         self.enemys = enemys   # 衝突判定用
         self.reload_timer = 0  # リロード時間
+        self.life = 100  # こうかとんのライフ数
+        self.coltm = 0
 
         # ジャンプ回数
         self.jump_count = 0
@@ -239,12 +242,17 @@ class Kokaton(pygame.sprite.Sprite):
         # ミサイルとの衝突判定
         for enemy in self.enemys:
             collide = self.rect.colliderect(enemy.rect)
-            if collide:  # 衝突するミサイルあり
-                self.image = self.down_image
-                down_flag = 1
-                self.fpvy = - self.JUMP_SPEED * 2  # 上向きに初速度を与える
+            if self.coltm == 0:
+                if collide:  # 衝突するミサイルあり
+                    self.image = self.down_image
+                    self.life -= 10  # ライフを一つ減少
+                    self.coltm += 1
+                    self.fpvy = - self.JUMP_SPEED * 2  # 上向きに初速度を与える
+            elif 1 <= self.coltm < 180:
+                self.coltm += 1
             else:
-                down_flag = 0
+                self.down_flag = 0
+                self.coltm = 0
         # return down_flag
 
     def collision_x(self):
@@ -303,6 +311,17 @@ class Kokaton(pygame.sprite.Sprite):
                 self.fpy = newy
                 # 衝突ブロックがないなら床の上にいない
                 self.on_floor = False
+
+
+class Kokaton_Life:
+    """こうかとんの残りライフを表示するためのクラス"""
+    def __init__(self, life):
+        self.font = pygame.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        self.img = self.font.render(f"残りライフ：{life}", 0, (0, 0, 255))
+        
+    def update(self, life, screen):
+        self.img = self.font.render(f"残りライフ：{life}", 0, (255, 0, 0))
+        screen.blit(self.img, (400, 30))        
                 
 
 class Map:
@@ -404,6 +423,23 @@ def load_image(filename, colorkey=None):
         image.set_colorkey(colorkey, RLEACCEL)
     return image
 
+
+def game_end(surface, life, screen):
+    font = pygame.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 70)
+    bg = surface
+    pygame.draw.rect(bg,(0, 0, 0), (0, 0, 1600, 900))
+    bg.set_alpha(128)
+    screen.blit(bg, (0,0))
+    if life <= 0:
+        img = load_image("game_over.png")
+        img = pygame.transform.rotozoom(img, 0, 2.0)
+        str = font.render(f"Game Over", 0, (255, 0, 0))
+
+    screen.blit(img, (250, 240))
+    screen.blit(str, (150, 50))
+    pygame.display.update()
+    time.sleep(3)
+
        
 class Kokaton_Game:
     def __init__(self):
@@ -422,17 +458,24 @@ class Kokaton_Game:
         
         # マップのロード
         self.map = Map("data/test2.map")
+        self.klife = Kokaton_Life(self.map.kokaton.life)
 
         # メインループ
         clock = pygame.time.Clock()
         while True:
             clock.tick(60)
-            self.update()
             self.draw(screen)
+            self.update(screen)
             pygame.display.update()
             self.key_handler()
+            #print(self.map.kokaton.life)
+            # print(self.map.kokaton.coltm)
+            if self.map.kokaton.life <= 0:
+                game_end(self.map.surface, self.map.kokaton.life, screen)
+                return
 
-    def update(self):
+    def update(self, screen):
+        self.klife.update(self.map.kokaton.life, screen)
         self.map.update()
 
     def draw(self, screen):
